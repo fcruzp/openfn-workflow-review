@@ -33,6 +33,8 @@ openfn-workflow-review/
     └── golden/                   # expected outputs (for example the Demo 3 diagram)
 ```
 
+**Packaging:** `scripts/build.py` bundles `rwo/` and `analyzer/` into one file, `rwo.pyz`, that unpacks itself to `~/.cache/rwo/` on first use and installs missing Python libraries. The skill copies it to `.rwo/rwo.pyz` in the project folder.
+
 **Languages:** Python 3 for orchestration and file generation (openpyxl for the spreadsheet, a small drawing library for the PNG). Node for the code analyzer, because it parses JavaScript exactly (with `acorn`). Both are already available in the Cowork workspace.
 
 ## 3. The run, command by command
@@ -52,6 +54,7 @@ openfn-workflow-review/
 | 9 | `rwo tests <wf> <scenarios.json>` | program + model | The model writes the scenarios as JSON; the program validates and builds the spreadsheet (one tab per institution, colors, columns). | `review/tests/test-scenarios.xlsx` |
 | 10 | `rwo questions` | program | Collects every question from the submitted JSONs, groups them by owner, numbers them. | `review/questions.md` |
 | 11 | `rwo summary` | program | Builds the final summary from the recorded data, and prints the path so the model opens it in the panel. | `SUMMARY.md`, `SUMMARY.html` |
+| — | `rwo archive --all` | program | "Review everything again": moves the whole review to `review/archive/<date>/`. | |
 
 Commands for the user stay the same: `/revision-workflows-openfn create`, `/revision-workflows-openfn`, `checkpoint` and `only "<workflow>"`. The skill just tells the model which `rwo` commands to run, in which order.
 

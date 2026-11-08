@@ -214,3 +214,45 @@ class TestsAndSummaryTests(unittest.TestCase):
         page = open(os.path.join(self.dir, "review", "SUMMARY.html"), encoding="utf-8").read()
         self.assertNotIn("http://", page.replace("https://app.openfn.org", ""))
         self.assertIn("prefers-color-scheme:dark", page)
+
+
+def _test_rerun_keeps_unchanged_and_archives_changed(self):
+    rwo(self.dir, "next")
+    self.assertEqual(rwo(self.dir, "submit", self.answer("Fetch records")).returncode, 0)
+    wfdir = os.path.join(self.dir, "workflows", "sample-sync")
+    with open(os.path.join(wfdir, "send-records.js"), "a") as f:
+        f.write("\n// edited\n")
+    rwo(self.dir, "inventory")
+    s = json.load(open(os.path.join(self.dir, "review", "state.json")))
+    step1 = s["workflows"][0]["steps"][0]
+    self.assertEqual((step1["status"], step1["guide"]), ("done", "review/sample-sync/wf1-step1-fetch-records.md"))
+    with open(os.path.join(wfdir, "fetch-records.js"), "a") as f:
+        f.write("\n// edited\n")
+    r = rwo(self.dir, "inventory")
+    self.assertIn("Archived", r.stdout)
+    s = json.load(open(os.path.join(self.dir, "review", "state.json")))
+    self.assertEqual(s["workflows"][0]["steps"][0]["status"], "pending")
+    self.assertFalse(os.path.exists(os.path.join(self.dir, "review", "sample-sync", "wf1-step1-fetch-records.md")))
+    arch = os.path.join(self.dir, s["archived"])
+    self.assertTrue(os.path.exists(os.path.join(arch, "sample-sync", "wf1-step1-fetch-records.md")))
+
+
+def _test_archive_all(self):
+    r = rwo(self.dir, "archive", "--all")
+    self.assertIn("NEXT -> run: rwo pull --force", r.stdout)
+    left = os.listdir(os.path.join(self.dir, "review"))
+    self.assertEqual(left, ["archive"])
+
+
+StepCycleTests.test_rerun_keeps_unchanged_and_archives_changed = _test_rerun_keeps_unchanged_and_archives_changed
+StepCycleTests.test_archive_all = _test_archive_all
+
+
+class PluginTests(unittest.TestCase):
+    def test_plugin_matches_the_tool_version(self):
+        from rwo import __version__
+        tool = os.path.join(ROOT, "plugin", "skills", "revision-workflows-openfn", "tool")
+        self.assertEqual(open(os.path.join(tool, "VERSION")).read().strip(), __version__)
+        self.assertEqual(json.load(open(os.path.join(ROOT, "plugin", ".claude-plugin", "plugin.json")))["version"],
+                         __version__)
+        self.assertTrue(os.path.exists(os.path.join(tool, "rwo.pyz")))

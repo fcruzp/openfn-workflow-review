@@ -4,3 +4,4 @@ node_modules/
 .env
 # local test runs
 .scratch/
+dist/

@@ -1,0 +1,11 @@
+{
+  "name": "openfn-workflow-review",
+  "version": "0.1.0",
+  "description": "Review, improve, document, test-plan and diagram the workflows of an OpenFn (Lightning) project. Programs do the mechanical work; Claude does the judgment. It only proposes: it never changes, deploys or runs the project.",
+  "author": {
+    "name": "Francisco Cruz"
+  },
+  "homepage": "https://github.com/fcruzp/openfn-workflow-review",
+  "repository": "https://github.com/fcruzp/openfn-workflow-review",
+  "keywords": ["openfn", "lightning", "workflow", "code review", "bpmn", "lucidchart", "test plan"]
+}

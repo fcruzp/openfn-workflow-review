@@ -2,11 +2,13 @@
 import argparse, sys, os
 from . import setup, pull, inventory, queue, submit, workflow, questions, diagram, tests_xlsx, summary, state as st
 from .progress import emit
+from . import __version__, archive
 
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog="rwo", description="OpenFn Workflow Review helpers")
     p.add_argument("--root", default=".", help="project folder (default: current folder)")
+    p.add_argument("--version", action="version", version=f"rwo {__version__}")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("setup", help="create or check the .env")
     sub.add_parser("create", help="create the .env only")
@@ -30,6 +32,8 @@ def main(argv=None):
     pt.add_argument("key")
     pt.add_argument("spec")
     sub.add_parser("summary", help="build SUMMARY.md and SUMMARY.html")
+    pa = sub.add_parser("archive", help="archive the whole review to start fresh ('review everything again')")
+    pa.add_argument("--all", action="store_true", required=True)
     a = p.parse_args(argv)
     root = os.path.abspath(a.root)
 
@@ -51,6 +55,12 @@ def main(argv=None):
         sys.exit(diagram.run(root, a.key, a.spec))
     if a.cmd == "tests":
         sys.exit(tests_xlsx.run(root, a.key, a.spec))
+    if a.cmd == "archive":
+        dest, moved = archive.archive_all(root)
+        emit(f"✔ Archived the previous review ({len(moved)} items) · {os.path.relpath(dest, root)}" if moved
+             else "✔ Nothing to archive.")
+        print("NEXT -> run: rwo pull --force")
+        sys.exit(0)
     if a.cmd == "summary":
         sys.exit(summary.run(root))
     if a.cmd == "questions":

@@ -48,6 +48,7 @@ def create(root="."):
         f.write(TEMPLATE)
     gi = os.path.join(root, ".gitignore")
     lines = open(gi, encoding="utf-8").read().splitlines() if os.path.exists(gi) else []
-    if ".env" not in [l.strip() for l in lines]:
+    missing = [x for x in (".env", ".rwo/") if x not in [l.strip() for l in lines]]
+    if missing:
         with open(gi, "a", encoding="utf-8") as f:
-            f.write(("\n" if lines and lines[-1] else "") + ".env\n")
+            f.write(("\n" if lines and lines[-1] else "") + "\n".join(missing) + "\n")

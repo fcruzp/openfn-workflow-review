@@ -1,7 +1,7 @@
 """rwo inventory: read the pulled workflows and build the work queue."""
 import os, glob, datetime, yaml
 from collections import deque
-from . import state as st, pull
+from . import archive, state as st, pull
 from .progress import emit, task
 
 
@@ -65,13 +65,21 @@ def run(root=".", only=None):
         if os.path.exists(os.path.join(root, "openfn.yaml")) else {}
 
     workflows, md = [], []
+    old_keys = {w["dir"]: w["key"] for w in prev.get("workflows", [])}
+    old_wf = {w["dir"]: w for w in prev.get("workflows", [])}
+    used = set(old_keys.values())
+    next_n = max([int(k[2:]) for k in used] + [0]) + 1
+    to_archive = []
     for i, d in enumerate(dirs, 1):
         wf = load_workflow(d)
         if not wf:
             continue
         triggers, steps = ordered_steps(wf)
         by_id = {s["id"]: s for s in wf.get("steps", [])}
-        key, dname = f"WF{i}", os.path.basename(d)
+        dname = os.path.basename(d)
+        key = old_keys.get(dname)
+        if not key:
+            key, next_n = f"WF{next_n}", next_n + 1
         in_scope = only is None or wf.get("name") == only
         entry = {"key": key, "id": wf.get("id"), "name": wf.get("name"), "dir": dname,
                  "yaml": wf["_yaml"], "triggers": [describe_trigger(t) for t in triggers],
@@ -90,13 +98,30 @@ def run(root=".", only=None):
                     "adaptor": s.get("adaptor", ""), "credential": cred if isinstance(cred, str) else str(cred),
                     "next": edge_text(s, by_id), "in_scope": in_scope,
                     "status": old["status"] if unchanged else "pending"}
+            if old and not unchanged and old.get("status") == "done":
+                # the code changed after its review: archive the old guide, proposed code and answers
+                wn = f"{old_keys[dname]}-{old['n']:02d}-{old['id']}"
+                to_archive += [old.get("guide"), os.path.join(st.REVIEW_DIR, dname, "proposed", f),
+                               os.path.join(st.REVIEW_DIR, "work", wn + ".step.json"),
+                               os.path.join(st.REVIEW_DIR, "work", wn + ".next.json")]
             if unchanged:
-                for k in ("counts", "started_at", "done_at"):
+                for k in ("counts", "started_at", "done_at", "priority", "guide", "titles"):
                     if k in old:
                         step[k] = old[k]
             entry["steps"].append(step)
             md.append(f"| {n} | {step['name']} | `{step['adaptor']}` | {step['credential'] or '—'} | {step['next']} |")
         md.append("")
+        ow = old_wf.get(dname)
+        same = ow and old_hashes.get(dname) == new_hashes.get(dname) and \
+            [x["file"] for x in ow["steps"]] == [x["file"] for x in entry["steps"]]
+        if same:
+            for k in ("proposed", "diagram", "tests", "institutions", "status"):
+                if k in ow:
+                    entry[k] = ow[k]
+        elif ow and (ow.get("proposed") or ow.get("diagram") or ow.get("tests")):
+            to_archive += [os.path.join(st.REVIEW_DIR, dname, "proposed", "CHANGES.md"),
+                           os.path.join(st.REVIEW_DIR, dname, "diagram"),
+                           os.path.join(st.REVIEW_DIR, "work", f"{key}.scenarios.json")]
         workflows.append(entry)
 
     state = {**prev, "workflows": workflows, "hashes": new_hashes,
@@ -104,7 +129,11 @@ def run(root=".", only=None):
                          "uuid": proj.get("uuid", ""),
                          "pulled_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")},
              "mode": prev.get("mode", "full")}
-    state.pop("pending_changes", None)
+    if to_archive:
+        dest, moved = archive.move(root, [p for p in to_archive if p])
+        if moved:
+            state["archived"] = os.path.relpath(dest, root)
+            emit(f"✔ Archived {len(moved)} old deliverables of what changed · {os.path.relpath(dest, root)}")
     st.save(state, root)
     total = sum(len(w["steps"]) for w in workflows if w["in_scope"])
     with open(os.path.join(root, st.REVIEW_DIR, "inventory.md"), "w", encoding="utf-8") as f:

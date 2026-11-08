@@ -64,6 +64,7 @@ def run(root=".", force=False):
     prev = st.load(root)
     if prev and not st.finished(prev) and not force:
         emit("▶ A previous review is not finished: resuming it without downloading again.")
+        print("NEXT resume -> run: rwo next")
         return 0
     if not reachable(vals["OPENFN_ENDPOINT"]):
         emit(f"✖ The network does not allow {vals['OPENFN_ENDPOINT']} from this workspace.\n"
@@ -85,8 +86,10 @@ def run(root=".", force=False):
         st.save(prev, root)
         if not changes:
             emit("✔ Nothing changed since the previous review.")
-        else:
-            emit("▶ Changes since the previous review:\n" + "\n".join(f"  • {c}" for c in changes))
+            print("NEXT unchanged -> show review/SUMMARY.html again and stop")
+            return 0
+        emit("▶ Changes since the previous review:\n" + "\n".join(f"  • {c}" for c in changes))
+    print("NEXT -> run: rwo inventory")
     return 0
 
 
