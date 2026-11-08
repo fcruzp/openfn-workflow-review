@@ -4,6 +4,7 @@ A Claude (Cowork) plugin that reviews every workflow of an OpenFn Lightning proj
 
 It only **proposes**. It never changes, deploys or runs anything in Lightning: you test the proposed code in a sandbox and decide what to apply.
 
+- **Install:** download [openfn-workflow-review.plugin](https://github.com/fcruzp/openfn-workflow-review/releases/latest/download/openfn-workflow-review.plugin) from the [latest release](https://github.com/fcruzp/openfn-workflow-review/releases/latest) and open it in Cowork
 - **Step-by-step guide:** [docs/quickstart.md](docs/quickstart.md)
 - **How it is built:** [ARCHITECTURE.md](ARCHITECTURE.md)
 - **Diagram house style:** [docs/bpmn-style-sheet.md](docs/bpmn-style-sheet.md)
