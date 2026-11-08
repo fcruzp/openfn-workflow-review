@@ -19,8 +19,11 @@ Work in progress (v0.1). Available commands:
 | `python3 -m rwo inventory [--only "<workflow>"]` | Builds `review/inventory.md` and the work queue |
 | `python3 -m rwo set env=yes` | Records the test-environment answer |
 | `python3 -m rwo status` | Shows the progress |
+| `node analyzer/analyze.js <step.js> [--adaptor <adaptor>]` | Runs the 12 automatic rules on one step (JSON output) |
 
 Run them from the project folder, with this repo on `PYTHONPATH`.
+
+Tests: `python3 -m unittest discover -s tests -v` (from the repo root).
 
 ## Requirements
 

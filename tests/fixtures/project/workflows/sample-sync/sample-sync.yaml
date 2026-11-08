@@ -1,0 +1,23 @@
+id: sample-sync
+name: Sample sync
+start: cron
+steps:
+  - type: cron
+    cron_expression: 0 * * * *
+    id: cron
+    next:
+      fetch-records:
+        condition: always
+  - id: fetch-records
+    name: Fetch records
+    adaptor: '@openfn/language-http@7.3.3'
+    configuration: Source API test
+    expression: ./fetch-records.js
+    next:
+      send-records:
+        condition: on_job_success
+  - id: send-records
+    name: Send records
+    adaptor: '@openfn/language-http@latest'
+    configuration: Target API test
+    expression: ./send-records.js
