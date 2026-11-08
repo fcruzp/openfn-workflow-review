@@ -80,13 +80,14 @@ If everything is there, Claude downloads the project and asks you **one** questi
 
 ### 6. Read the summary
 
-When the review is done, Claude opens the summary for you in the side panel, as a visual report with colors (it is also saved as `review/SUMMARY.html` and `review/SUMMARY.md`). It tells you:
+When the review is done, Claude shows the summary in the side panel. To use it fully, **open `review/SUMMARY.html` from your folder in your browser** (double-click it): from there every link opens the file directly, so you never have to search the folder. It is also saved as `review/SUMMARY.md`.
 
-- how many issues each workflow has, by priority (blocking, fix before production, optional);
-- the blocking items, with a link to each change guide;
-- the assumptions Claude could not verify;
-- the partner institutions it found in the code (correct them if needed);
-- where every deliverable is, and what to do next.
+It has two parts:
+
+- **Overview (for managers):** whether the project is ready for production, the key numbers (workflows, steps, blocking, fix before production, optional, test scenarios, questions), the status of each workflow, and buttons to the test spreadsheet, the questions and each Lucidchart file.
+- **Details (for the technical team):** the blocking issues with what happens today and the proposed change; then, for each workflow, its diagram, every step with its findings, and links to its change guide, its proposed code, `CHANGES.md` and the proposed `workflow.yaml`.
+
+It also includes how to import the diagrams into Lucidchart, the test plan, the questions for the client, the assumptions to confirm (and the partner institutions found in the code: correct them if needed), and a checklist of next steps.
 
 ### 7. Test the proposed code in a sandbox
 
@@ -94,11 +95,7 @@ Each workflow has its complete proposed version in `review/<workflow>/proposed/`
 
 ### 8. Import the diagram into Lucidchart
 
-Each workflow has a `.bpmn` file (for Lucid) and a `.png` preview in `review/<workflow>/diagram/`.
-
-1. Open Lucidchart and create a new document.
-2. Go to **File → Import**, choose **BPMN**, and select the `.bpmn` file. Menu names can vary slightly.
-3. Check it against the `.png` preview: lanes, steps, arrows and colors.
+Each workflow has a `.bpmn` file (for Lucid) and a `.png` preview in `review/<workflow>/diagram/`. The **"Import the diagrams into Lucidchart"** section of the summary has the steps and a link to every `.bpmn` file. In short: in Lucidchart, create a new blank document, choose **File → Import → BPMN** and select the file (menu names can vary slightly), then compare it with the `.png`.
 
 ### 9. Share the test scenarios and institution guides as a Google Sheet
 
@@ -135,10 +132,12 @@ Claude runs the OpenFn CLI inside Cowork, and Cowork only reaches the internet d
 
 | Deliverable | Format | Where |
 |---|---|---|
-| Final summary | `.html` (visual) and `.md` | `review/SUMMARY.html`, `review/SUMMARY.md` |
+| Final summary, with links to every deliverable below | `.html` (visual) and `.md` | `review/SUMMARY.html` (open it in your browser), `review/SUMMARY.md` |
 | Progress file | `.md` | `review/progress.md` |
 | Change guide per step | `.md` | `review/<workflow>/wfN-stepX-<step>.md` |
 | Proposed code per step and complete proposed workflow | `.js`, `workflow.yaml`, `CHANGES.md` | `review/<workflow>/proposed/` (your downloaded project in `workflows/` is never changed) |
 | Test scenarios and institution guides | `.xlsx` (one tab per institution) | `review/tests/test-scenarios.xlsx` |
 | Diagram | `.bpmn` and `.png` | `review/<workflow>/diagram/` (and imported into Lucidchart) |
 | Questions for the client | `.md` | `review/questions.md`, ready for email |
+
+The folder also has `.rwo/`, where Claude keeps the review tool, and `.env`, your settings. Don't edit or share either; both are excluded from Git by `.gitignore`.
