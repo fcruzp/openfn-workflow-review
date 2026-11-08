@@ -65,3 +65,61 @@ class SetupAndInventoryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StepCycleTests(unittest.TestCase):
+    """next -> submit (rejected / accepted) -> close-workflow -> questions."""
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        shutil.copytree(os.path.join(FIX, "project"), self.dir, dirs_exist_ok=True)
+        with open(os.path.join(self.dir, ".env"), "w") as f:
+            f.write("OPENFN_ENDPOINT=https://app.openfn.org\nOPENFN_PROJECT_ID=x\nOPENFN_API_KEY=k\n")
+        rwo(self.dir, "inventory")
+        rwo(self.dir, "set", "env=yes")
+
+    def tearDown(self):
+        shutil.rmtree(self.dir)
+
+    def answer(self, name, **over):
+        good = open(os.path.join(FIX, "analyzer", "good-step.js")).read()
+        a = {"workflow": "Sample sync", "step": name, "summary": "s", "priority": "no-change-needed",
+             "automatic_findings": [], "findings": [], "proposed_code": good,
+             "sandbox_tests": [{"name": "a", "input": {}, "expected_log": "x"},
+                               {"name": "b", "input": {}, "expected_log": "y"}],
+             "questions": [{"owner": "client", "text": f"{name}: question?"}]}
+        a.update(over)
+        p = os.path.join(self.dir, "review", "work", f"{name}.json")
+        with open(p, "w") as f:
+            json.dump(a, f)
+        return os.path.relpath(p, self.dir)
+
+    def test_full_cycle(self):
+        self.assertIn("step 1/2", rwo(self.dir, "next").stdout)
+        self.assertEqual(rwo(self.dir, "submit", self.answer("Fetch records")).returncode, 0)
+        out = rwo(self.dir, "next").stdout
+        self.assertIn("step 2/2", out)
+        nxt = json.load(open(os.path.join(self.dir, "review", "work", "WF1-02-send-records.next.json")))
+        ids = [f["id"] for f in nxt["automatic_findings"]]
+        r = rwo(self.dir, "submit", self.answer("Send records"))
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("is not answered", r.stdout)
+        code = "// [CHANGE] fixed\n" + open(os.path.join(FIX, "analyzer", "good-step.js")).read()
+        r = rwo(self.dir, "submit", self.answer(
+            "Send records", priority="blocking", proposed_code=code,
+            automatic_findings=[{"id": i, "status": "confirmed", "reason": "r"} for i in ids],
+            findings=[{"from": ",".join(ids), "priority": "blocking", "title": "t", "today": "d",
+                       "change": "c", "fixed_in_code": False}]))
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertIn("WORKFLOW_NEXT WF1 -> run: rwo close-workflow WF1", rwo(self.dir, "next").stdout)
+        self.assertEqual(rwo(self.dir, "close-workflow", "WF1").returncode, 0)
+        prop = os.path.join(self.dir, "review", "sample-sync", "proposed")
+        self.assertTrue(os.path.exists(os.path.join(prop, "CHANGES.md")))
+        self.assertTrue(os.path.exists(os.path.join(prop, "sample-sync.yaml")))
+        self.assertIn("2 questions", rwo(self.dir, "questions").stdout)
+
+    def test_personal_data_is_rejected(self):
+        rwo(self.dir, "next")
+        r = rwo(self.dir, "submit", self.answer("Fetch records", summary="Calls 402-1234567-8"))
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("Personal data", r.stdout)

@@ -3,7 +3,7 @@ from . import envfile
 from .progress import emit
 
 
-def run(root=".", create_only=False):
+def run(root=".", create_only=False, quiet=False):
     status = envfile.check(root)
     if status is None:
         envfile.create(root)
@@ -15,6 +15,8 @@ def run(root=".", create_only=False):
         emit("⚠ The .env file is missing: " + ", ".join(missing) +
              ". Fill them in, save, and type /revision-workflows-openfn again when you're ready.")
         return 2
+    if quiet:
+        return 0
     if create_only:
         emit("✔ The .env file already exists and is complete.")
     else:

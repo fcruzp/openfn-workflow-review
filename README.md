@@ -19,6 +19,10 @@ Work in progress (v0.1). Available commands:
 | `python3 -m rwo inventory [--only "<workflow>"]` | Builds `review/inventory.md` and the work queue |
 | `python3 -m rwo set env=yes` | Records the test-environment answer |
 | `python3 -m rwo status` | Shows the progress |
+| `python3 -m rwo next` | Gives the next step to review, with context and automatic findings |
+| `python3 -m rwo submit <answer.json>` | Validates the review of a step and generates its guide and proposed code |
+| `python3 -m rwo close-workflow WF1` | Completes the proposed workflow and its `CHANGES.md` |
+| `python3 -m rwo questions` | Collects the questions for the client |
 | `node analyzer/analyze.js <step.js> [--adaptor <adaptor>]` | Runs the 12 automatic rules on one step (JSON output) |
 
 Run them from the project folder, with this repo on `PYTHONPATH`.
