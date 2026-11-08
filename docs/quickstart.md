@@ -17,7 +17,7 @@ This guide walks you through reviewing, improving, documenting and diagramming t
 
 1. Install the Claude desktop app and sign in with your OpenFn account.
 2. Open **Cowork** in the app.
-3. Install the **OpenFn Workflow Review** plugin: download [openfn-workflow-review.plugin](https://github.com/fcruzp/openfn-workflow-review/releases/latest/download/openfn-workflow-review.plugin) (latest release on GitHub), open it in Cowork and accept it. It adds the `/revision-workflows-openfn` command.
+3. Install the **OpenFn Workflow Review** plugin: in Cowork, type `Install the plugin from https://github.com/fcruzp/openfn-workflow-review` and press the install button on the card Claude shows you. (Or download [openfn-workflow-review.plugin](https://github.com/fcruzp/openfn-workflow-review/releases/latest/download/openfn-workflow-review.plugin) and open it in Cowork.) It adds the `/revision-workflows-openfn` command.
 
 ### 2. Create an empty folder and connect it to Cowork
 
