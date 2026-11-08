@@ -1,0 +1,33 @@
+id: contact-update
+name: Contact update
+start: webhook
+steps:
+  - type: webhook
+    id: webhook
+    next:
+      get-contacts:
+        condition: always
+  - id: get-contacts
+    name: Get updated contacts from Registry
+    adaptor: '@openfn/language-http@7.3.3'
+    expression: ./get-contacts.js
+    next:
+      update-contact:
+        condition: on_job_success
+  - id: update-contact
+    name: Update contact in Benefits
+    adaptor: '@openfn/language-http@7.3.3'
+    expression: ./update-contact.js
+    next:
+      send-sms:
+        condition: on_job_success
+      send-whatsapp:
+        condition: on_job_success
+  - id: send-sms
+    name: Send SMS confirmation
+    adaptor: '@openfn/language-http@7.3.3'
+    expression: ./send-sms.js
+  - id: send-whatsapp
+    name: Send WhatsApp confirmation
+    adaptor: '@openfn/language-http@7.3.3'
+    expression: ./send-whatsapp.js

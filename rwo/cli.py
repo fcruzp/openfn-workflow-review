@@ -1,6 +1,6 @@
 """Entry point: python3 -m rwo <command> [options], run from the project folder."""
 import argparse, sys, os
-from . import setup, pull, inventory, queue, submit, workflow, questions, state as st
+from . import setup, pull, inventory, queue, submit, workflow, questions, diagram, state as st
 from .progress import emit
 
 
@@ -23,6 +23,9 @@ def main(argv=None):
     pc = sub.add_parser("close-workflow", help="complete the proposed workflow and CHANGES.md")
     pc.add_argument("key")
     sub.add_parser("questions", help="collect the questions for the client")
+    pd = sub.add_parser("diagram", help="draw the workflow (.bpmn + .png)")
+    pd.add_argument("key")
+    pd.add_argument("spec")
     a = p.parse_args(argv)
     root = os.path.abspath(a.root)
 
@@ -40,6 +43,8 @@ def main(argv=None):
         sys.exit(submit.run(root, a.file))
     if a.cmd == "close-workflow":
         sys.exit(workflow.close(root, a.key))
+    if a.cmd == "diagram":
+        sys.exit(diagram.run(root, a.key, a.spec))
     if a.cmd == "questions":
         sys.exit(questions.run(root))
     if a.cmd == "set":

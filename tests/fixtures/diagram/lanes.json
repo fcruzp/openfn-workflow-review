@@ -1,0 +1,24 @@
+{
+  "title": "Contact update (proposal)",
+  "pool": "Contact update (proposal): citizen contact details",
+  "language": "en",
+  "lanes": ["Registry", "OpenFn Automation", "Benefits"],
+  "openfn_lane": "OpenFn Automation",
+  "start_label": "Webhook",
+  "steps": {
+    "get-contacts": {"kind": "institutional", "endpoint": "GET /contacts/updated",
+                     "reads": {"lane": "Registry", "label": "Updated contacts (Registry)"}},
+    "update-contact": {"kind": "institutional", "endpoint": "POST /api/cases (per contact)",
+                       "result": {"lane": "Benefits", "label": "Contact saved in Benefits"}},
+    "send-sms": {"kind": "notification", "endpoint": "GET /sms/send"},
+    "send-whatsapp": {"kind": "notification", "endpoint": "POST /whatsapp (template)"}
+  },
+  "ends": {"send-sms": "Citizen notified", "send-whatsapp": "Citizen notified"},
+  "notes": [
+    {"lane": "Registry", "title": "Data used from the Registry (per contact)", "lines": ["id: national ID", "phoneType: \"Phone\" or \"Mobile\"", "number: new phone number"]},
+    {"lane": "OpenFn Automation", "near": "update-contact", "title": "[FC] Suggestions", "lines": ["FC01. Log contacts with no number or unknown type.", "FC02. One failed record must not stop the others."]},
+    {"lane": "OpenFn Automation", "near": "get-contacts", "title": "@Client - Questions", "lines": ["P1. Which system calls the webhook, and what does it send?"]},
+    {"lane": "OpenFn Automation", "near": "send-sms", "title": "[FC] Suggestions (SMS and WhatsApp)", "lines": ["FC03. A failed message must not stop the others.", "FC04. Pin the adaptor version."]},
+    {"lane": "Benefits", "title": "@Client - Questions", "lines": ["P2. Does /api/cases update the contact or create a new case?"]}
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "_source": "Validated house style, taken from the Demo 3 reference diagram (see docs/bpmn-style-sheet.md).",
+  "colors": {
+    "institutional": "#E1E0FF",
+    "notification": "#FDD9A5",
+    "comment": "#C3F5C5",
+    "end": "#C3F5C5",
+    "indicator": "#BDE3FF",
+    "internal": "#FFFFFF",
+    "stroke": "#000000"
+  },
+  "legend": {
+    "en": {"institutional": "Calls to institutional APIs", "notification": "Calls to notification APIs",
+           "comment": "Comments/Questions", "indicator": "New: indicators"},
+    "es": {"institutional": "Llamadas a APIs institucionales", "notification": "Llamadas a APIs notificaciones",
+           "comment": "Comentarios/Preguntas", "indicator": "Nuevo: indicadores"}
+  },
+  "sizes": {
+    "task": [150, 70], "event": [36, 36], "gateway": [50, 50], "data_object": [36, 50], "data_store": [50, 50],
+    "legend_box": [230, 24], "legend_pitch": 30, "endpoint": [200, 22],
+    "pool_x": 10, "pool_y": 135, "pool_label": 30, "title_height": 80,
+    "column_pitch": 230, "branch_pitch": 220, "end_gap": 70,
+    "lane_min": 160, "openfn_lane_min": 500, "margin_right": 80, "note_width": 300, "note_line": 20
+  }
+}

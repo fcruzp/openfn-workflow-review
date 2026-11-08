@@ -123,3 +123,47 @@ class StepCycleTests(unittest.TestCase):
         r = rwo(self.dir, "submit", self.answer("Fetch records", summary="Calls 402-1234567-8"))
         self.assertEqual(r.returncode, 1)
         self.assertIn("Personal data", r.stdout)
+
+
+class DiagramTests(unittest.TestCase):
+    """The Demo 3-shaped fixture must reproduce Demo 3's structure and colors."""
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        shutil.copytree(os.path.join(FIX, "diagram", "project"), self.dir, dirs_exist_ok=True)
+        with open(os.path.join(self.dir, ".env"), "w") as f:
+            f.write("OPENFN_ENDPOINT=https://app.openfn.org\nOPENFN_PROJECT_ID=x\nOPENFN_API_KEY=k\n")
+        rwo(self.dir, "inventory")
+
+    def tearDown(self):
+        shutil.rmtree(self.dir)
+
+    def test_demo3_signature(self):
+        import collections
+        import xml.etree.ElementTree as ET
+        r = rwo(self.dir, "diagram", "WF1", os.path.join(FIX, "diagram", "lanes.json"))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        out = os.path.join(self.dir, "review", "contact-update", "diagram")
+        self.assertTrue(os.path.getsize(os.path.join(out, "contact-update.png")) > 10000)
+        tree = ET.parse(os.path.join(out, "contact-update.bpmn"))
+        tags = collections.Counter(e.tag.split("}")[1] for e in tree.iter())
+        expected = {"lane": 3, "startEvent": 1, "messageEventDefinition": 1, "task": 4, "parallelGateway": 1,
+                    "endEvent": 3, "dataObjectReference": 1, "sequenceFlow": 7, "association": 2}
+        self.assertEqual({k: tags[k] for k in expected}, expected)
+        fills = collections.Counter()
+        for e in tree.iter():
+            for k, v in e.attrib.items():
+                if k.endswith("}fill") or k == "fill":
+                    fills[v.upper()] += 1
+        self.assertEqual(fills["#E1E0FF"], 2)   # institutional API tasks
+        self.assertEqual(fills["#FDD9A5"], 2)   # notification tasks
+        self.assertEqual(fills["#C3F5C5"], 3)   # end events
+        self.assertIn("DIAGRAM_PNG", r.stdout)
+
+    def test_unknown_step_in_lanes_is_rejected(self):
+        bad = json.load(open(os.path.join(FIX, "diagram", "lanes.json")))
+        bad["steps"]["no-such-step"] = {"lane": "OpenFn Automation"}
+        p = os.path.join(self.dir, "bad.json")
+        json.dump(bad, open(p, "w"))
+        r = rwo(self.dir, "diagram", "WF1", p)
+        self.assertNotEqual(r.returncode, 0)
