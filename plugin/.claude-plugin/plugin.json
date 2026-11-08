@@ -1,6 +1,6 @@
 {
   "name": "openfn-workflow-review",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Review, improve, document, test-plan and diagram the workflows of an OpenFn (Lightning) project. Programs do the mechanical work; Claude does the judgment. It only proposes: it never changes, deploys or runs the project.",
   "author": {
     "name": "Francisco Cruz"

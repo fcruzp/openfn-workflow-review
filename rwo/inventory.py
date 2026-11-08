@@ -52,6 +52,35 @@ def edge_text(s, by_id):
     return "; ".join(out) or "end"
 
 
+def _yaml(path):
+    try:
+        return yaml.safe_load(open(path, encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
+
+
+def project_info(root):
+    """Name, endpoint, UUID and description, from openfn.yaml, then .projects/*.yaml, then .env."""
+    info = {"name": "", "endpoint": "", "uuid": "", "description": ""}
+    sources = [_yaml(os.path.join(root, "openfn.yaml")).get("project") or {}]
+    for p in sorted(glob.glob(os.path.join(root, ".projects", "*.y*ml"))):
+        d = _yaml(p)
+        sources.append({**(d.get("openfn") or {}), **{k: d[k] for k in ("name", "id", "description") if d.get(k)}})
+    for src in sources:
+        for k in info:
+            info[k] = info[k] or str(src.get(k) or (src.get("id") if k == "name" else "") or "").strip()
+    try:
+        from . import envfile
+        env = envfile.public_values(root)
+        info["endpoint"] = info["endpoint"] or env.get("OPENFN_ENDPOINT", "")
+        info["uuid"] = info["uuid"] or env.get("OPENFN_PROJECT_ID", "")
+    except OSError:
+        pass
+    info["name"] = info["name"] or "OpenFn project"
+    info["endpoint"] = info["endpoint"].rstrip("/")
+    return info
+
+
 def run(root=".", only=None):
     dirs = pull.workflow_dirs(root)
     if not dirs:
@@ -61,8 +90,7 @@ def run(root=".", only=None):
     prev_steps = {(w["dir"], s["file"]): s for w in prev.get("workflows", []) for s in w["steps"]}
     new_hashes = pull.hashes(root)
     old_hashes = prev.get("hashes", {})
-    proj = yaml.safe_load(open(os.path.join(root, "openfn.yaml"), encoding="utf-8")).get("project", {}) \
-        if os.path.exists(os.path.join(root, "openfn.yaml")) else {}
+    proj = project_info(root)
 
     workflows, md = [], []
     old_keys = {w["dir"]: w["key"] for w in prev.get("workflows", [])}
@@ -125,8 +153,8 @@ def run(root=".", only=None):
         workflows.append(entry)
 
     state = {**prev, "workflows": workflows, "hashes": new_hashes,
-             "project": {"name": proj.get("name") or proj.get("id", ""), "endpoint": proj.get("endpoint", ""),
-                         "uuid": proj.get("uuid", ""),
+             "project": {"name": proj["name"], "endpoint": proj["endpoint"], "uuid": proj["uuid"],
+                         "description": proj["description"],
                          "pulled_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")},
              "mode": prev.get("mode", "full")}
     if to_archive:

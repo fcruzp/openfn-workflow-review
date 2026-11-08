@@ -54,6 +54,7 @@ A program called `rwo` does everything mechanical: setup, download, inventory, a
    1. Relay the progress lines.
    2. Close in two or three lines: done, number of blocking items, where the files are.
    3. Show the file in the `SUMMARY_HTML` line in the session with the file-preview tool if one exists (for example `SendUserFile` with `display: "render"`, staging it first if it is on the user's computer); otherwise show `review/SUMMARY.md`.
+   4. Tell the user, in one line, to open `review/SUMMARY.html` from their folder in a browser: from there every link (diagrams, Lucidchart files, change guides, proposed code, test spreadsheet, questions) opens the file directly.
 
 The user can interrupt in plain words at any time; do what they ask, then resume the loop with `rwo next`.
 

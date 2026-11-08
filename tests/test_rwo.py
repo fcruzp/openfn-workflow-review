@@ -209,7 +209,7 @@ class TestsAndSummaryTests(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn("SUMMARY_HTML review/SUMMARY.html", r.stdout)
         md = open(os.path.join(self.dir, "review", "SUMMARY.md"), encoding="utf-8").read()
-        self.assertIn("2 not reviewed yet", md)
+        self.assertIn("2 of 2 steps are still pending", md)
         self.assertIn("Source API team", md)
         page = open(os.path.join(self.dir, "review", "SUMMARY.html"), encoding="utf-8").read()
         self.assertNotIn("http://", page.replace("https://app.openfn.org", ""))
