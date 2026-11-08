@@ -2,7 +2,7 @@
 import json, os
 from . import state as st
 from .inventory import load_workflow
-from .workflow import find
+from .workflow import find, maybe_done
 from .diagram_layout import validate, build
 from .diagram_bpmn import write as write_bpmn
 from .diagram_png import render
@@ -34,6 +34,7 @@ def run(root, key, spec_path):
     write_bpmn(lay, bpmn, wf["key"])
     render(lay, png)
     wf["diagram"] = True
+    maybe_done(state, wf)
     st.save(state, root)
     emit(f"✔ {wf['key']}: diagram ready (review/{wf['dir']}/diagram/: .bpmn for Lucidchart, .png preview).")
     print(f"DIAGRAM_PNG {os.path.relpath(png, root)}")

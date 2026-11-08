@@ -167,3 +167,50 @@ class DiagramTests(unittest.TestCase):
         json.dump(bad, open(p, "w"))
         r = rwo(self.dir, "diagram", "WF1", p)
         self.assertNotEqual(r.returncode, 0)
+
+
+class TestsAndSummaryTests(unittest.TestCase):
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        shutil.copytree(os.path.join(FIX, "project"), self.dir, dirs_exist_ok=True)
+        with open(os.path.join(self.dir, ".env"), "w") as f:
+            f.write("OPENFN_ENDPOINT=https://app.openfn.org\nOPENFN_PROJECT_ID=x\nOPENFN_API_KEY=k\n")
+        rwo(self.dir, "inventory")
+
+    def tearDown(self):
+        shutil.rmtree(self.dir)
+
+    def test_spreadsheet_has_scenarios_and_institution_tabs(self):
+        import openpyxl
+        r = rwo(self.dir, "tests", "WF1", os.path.join(FIX, "scenarios.json"))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        wb = openpyxl.load_workbook(os.path.join(self.dir, "review", "tests", "test-scenarios.xlsx"))
+        self.assertEqual(wb.sheetnames, ["Test scenarios", "Guide - Source API team", "Guide - Target API team"])
+        self.assertEqual(wb["Test scenarios"]["A7"].value, "WF1-T03")
+        g = wb["Guide - Target API team"]
+        self.assertEqual(g["F5"].value, "Yes, with Source API team")
+        self.assertEqual(g["F6"].value, "No")
+        self.assertTrue(g["G5"].value.startswith("1. "))
+
+    def test_bad_scenarios_are_rejected(self):
+        bad = json.load(open(os.path.join(FIX, "scenarios.json")))
+        bad["scenarios"][2]["institutions"] = ["Source API team"]
+        bad["scenarios"][0]["setup"] += " Call 809-555-1234."
+        p = os.path.join(self.dir, "bad.json")
+        json.dump(bad, open(p, "w"))
+        r = rwo(self.dir, "tests", "WF1", p)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("credential tests need no institution", r.stdout)
+        self.assertIn("Personal data", r.stdout)
+
+    def test_summary_files(self):
+        rwo(self.dir, "tests", "WF1", os.path.join(FIX, "scenarios.json"))
+        r = rwo(self.dir, "summary")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("SUMMARY_HTML review/SUMMARY.html", r.stdout)
+        md = open(os.path.join(self.dir, "review", "SUMMARY.md"), encoding="utf-8").read()
+        self.assertIn("2 not reviewed yet", md)
+        self.assertIn("Source API team", md)
+        page = open(os.path.join(self.dir, "review", "SUMMARY.html"), encoding="utf-8").read()
+        self.assertNotIn("http://", page.replace("https://app.openfn.org", ""))
+        self.assertIn("prefers-color-scheme:dark", page)

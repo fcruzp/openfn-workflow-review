@@ -1,6 +1,6 @@
 """Entry point: python3 -m rwo <command> [options], run from the project folder."""
 import argparse, sys, os
-from . import setup, pull, inventory, queue, submit, workflow, questions, diagram, state as st
+from . import setup, pull, inventory, queue, submit, workflow, questions, diagram, tests_xlsx, summary, state as st
 from .progress import emit
 
 
@@ -26,6 +26,10 @@ def main(argv=None):
     pd = sub.add_parser("diagram", help="draw the workflow (.bpmn + .png)")
     pd.add_argument("key")
     pd.add_argument("spec")
+    pt = sub.add_parser("tests", help="validate the test scenarios and build the spreadsheet")
+    pt.add_argument("key")
+    pt.add_argument("spec")
+    sub.add_parser("summary", help="build SUMMARY.md and SUMMARY.html")
     a = p.parse_args(argv)
     root = os.path.abspath(a.root)
 
@@ -45,6 +49,10 @@ def main(argv=None):
         sys.exit(workflow.close(root, a.key))
     if a.cmd == "diagram":
         sys.exit(diagram.run(root, a.key, a.spec))
+    if a.cmd == "tests":
+        sys.exit(tests_xlsx.run(root, a.key, a.spec))
+    if a.cmd == "summary":
+        sys.exit(summary.run(root))
     if a.cmd == "questions":
         sys.exit(questions.run(root))
     if a.cmd == "set":

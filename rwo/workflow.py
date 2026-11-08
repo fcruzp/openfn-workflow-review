@@ -38,6 +38,13 @@ def close(root, key):
     with open(os.path.join(dst, "CHANGES.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(rows) + "\n")
     wf["proposed"] = True
+    maybe_done(state, wf)
     st.save(state, root)
     emit(f"✔ {wf['key']}: complete proposed workflow ready in review/{wf['dir']}/proposed/ (with CHANGES.md).")
     return 0
+
+
+def maybe_done(state, wf):
+    if wf.get("proposed") and wf.get("diagram") and wf.get("tests") and wf.get("status") != "done":
+        wf["status"] = "done"
+        task("update", f"{wf['key']} · {wf['name']} · {len(wf['steps'])} steps", "completed")

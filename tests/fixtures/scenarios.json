@@ -1,0 +1,33 @@
+{
+  "workflow": "Sample sync",
+  "scenarios": [
+    {"ref": "s1", "category": "Normal flow", "priority": "blocking", "step": null,
+     "title": "New records are copied from Source to Target",
+     "setup": "Create 2 test records in Source with invented data (ID TEST-001 and TEST-002).",
+     "expected": "Run succeeds; the log says 2 records sent; both appear in Target.",
+     "institutions": ["Source API team", "Target API team"]},
+    {"ref": "s2", "category": "System failure", "priority": "fix-before-production", "step": "Send records",
+     "title": "Target is down for one record",
+     "setup": "Ask the Target team to make TEST-002 fail on purpose.",
+     "expected": "TEST-001 is sent; the log lists TEST-002 as failed; the run ends Failed with a friendly message.",
+     "institutions": ["Target API team"]},
+    {"ref": "s3", "category": "Credentials", "priority": "optional", "step": "Fetch records",
+     "title": "Expired test credential",
+     "setup": "In the sandbox, edit the Source API test credential with a wrong value.",
+     "expected": "Run ends Failed with a message asking to update the credential.",
+     "institutions": []}
+  ],
+  "institution_guides": [
+    {"institution": "Source API team", "tests": [
+      {"ref": "s1", "check": "That new records reach Target.", "why": "This is the main purpose of the workflow.",
+       "before": ["Create the 2 test records.", "Tell OpenFn the IDs."], "during": ["Wait for the next run."],
+       "after": ["Confirm the records were not changed in Source."]}]},
+    {"institution": "Target API team", "tests": [
+      {"ref": "s1", "check": "That both records arrive.", "why": "Confirms the data is complete.",
+       "before": ["Have the test environment ready."], "during": ["Watch the incoming calls."],
+       "after": ["Search TEST-001 and TEST-002 and send a screenshot."]},
+      {"ref": "s2", "check": "That one failure does not stop the others.", "why": "In production one bad record must not block the rest.",
+       "before": ["Prepare a rule that rejects TEST-002."], "during": ["Watch the calls."],
+       "after": ["Confirm TEST-001 arrived and TEST-002 did not."], "note": "Remove the rule after the test."}]}
+  ]
+}
